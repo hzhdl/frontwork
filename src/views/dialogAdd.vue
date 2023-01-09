@@ -1,51 +1,79 @@
 <template>
     <div>
-      <a-button type="primary" @click="showModal">用户注册</a-button>
-      <a-modal v-model:visible="visible" title="用户注册" @ok="handleOk">
+      <a-button type="primary" @click="showModal">UserAdd</a-button>
+      <a-modal v-model:visible="visible" title="UserAdd" @ok="handleOk">
         <template #footer>
-          <a-button key="back" @click="handleCancel">返回</a-button>
-          <a-button key="submit" type="primary" :loading="loading" @click="handleOk">提交</a-button>
+          <a-button key="back" @click="handleCancel">Return</a-button>
+          <a-button key="submit" type="primary" :loading="loading" @click="handleOk">Submit</a-button>
         </template>
         <a-form ref="formRef" :model="form" :label-col="labelCol" :rules="rules">
           <a-form-item
-            label="账号"
-            name="id"
+            label="name"
+            name="name"
             style="width: 450px"
           >
             <a-input v-model:value="form.id"></a-input>
           </a-form-item>
 
           <a-form-item
-            label="密码"
-            name="password"
+            label="age"
+            name="age"
             style="width: 450px"
           >
-          <a-input-password v-model:value="form.password"></a-input-password>
+            <a-input v-model:value="form.age"></a-input>
           </a-form-item>
 
-          <a-form-item name="type" label="类型" style="width: 450px">
-            <a-select
-              v-model:value="form.type"
-              style="width: 400px; label-width: 150px"
-              placeholder="类型"
-              :options="options"
-            >
-            </a-select>
+          <a-form-item
+            label="address"
+            name="address"
+            style="width: 450px"
+          >
+            <a-cascader v-model:value="form.address" :options="options" placeholder="Please select" />
           </a-form-item>
-          <a-form-item label="备注" name="note">
-            <a-input
-              type="textarea"
-              :rows="2"
-              v-model:value="form.note"
-            ></a-input>
-          </a-form-item>
-        </a-form>
+
+          </a-form>
       </a-modal>
     </div>
   </template>
 <script>
 import { defineComponent, ref, reactive, toRaw } from 'vue'
 import { Modal } from 'ant-design-vue'
+
+const options = [
+  {
+    value: 'zhejiang',
+    label: 'Zhejiang',
+    children: [
+      {
+        value: 'hangzhou',
+        label: 'Hangzhou',
+        children: [
+          {
+            value: 'xihu',
+            label: 'West Lake',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'jiangsu',
+    label: 'Jiangsu',
+    children: [
+      {
+        value: 'nanjing',
+        label: 'Nanjing',
+        children: [
+          {
+            value: 'zhonghuamen',
+            label: 'Zhong Hua Men',
+          },
+        ],
+      },
+    ],
+  },
+];
+
 export default defineComponent({
   setup () {
     const loading = ref(false)
@@ -54,31 +82,22 @@ export default defineComponent({
     const formRef = ref()
     const form = reactive(
       {
-        password: '',
-        id: '',
-        type: '',
-        note: ''
+        name: '',
+        age: '',
+        address: '',
+        addressNew: '',
       }
     )
-    const options = ref([
-      {
-        value: '1',
-        label: '管理员'
-      },
-      {
-        value: '2',
-        label: '用户'
-      }
-    ])
+
     const rules = {
-      id: [
-        { required: true, trigger: 'blur', message: '请输入账号' }
+      name: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your name' }
       ],
-      password: [
-        { required: true, trigger: 'blur', message: '请输入密码' }
+      age: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your age' }
       ],
-      type: [
-        { required: true, trigger: 'blur', message: '请选择用户类型' }
+      address: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your address' }
       ]
     }
     const handleOk = () => {
