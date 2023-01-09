@@ -1,58 +1,43 @@
 <template>
-  <div>
-    <div class="container">
-      <div class="form-box">
-        <a-form ref="formRef" :model="form" label-width="100px" :rules="rules">
+  <div class="addForm" > 
+    <Caption class="titleAdd">UserAdd</Caption>
+        <a-form ref="formRef" :model="form" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
           <a-form-item
-            label="编号"
-            prop="id"
-            style="width: 500px"
+            label="name"
+            name="name"
+            style="width: 450px"
           >
-            <a-input v-model="form.id"></a-input>
+            <a-input v-model:value="form.name"></a-input>
           </a-form-item>
 
-          <a-form-item prop="type" label="类型" style="width: 500px">
-            <a-select
-              v-model:value="value"
-              label-in-value
-              style="width: 400px"
-              placeholder="类型"
-              autofocus="true"
-              :options="options"
-            >
-            </a-select>
+          <a-form-item
+            label="age"
+            name="age"
+            style="width: 450px"
+          >
+            <a-input v-model:value="form.age"></a-input>
           </a-form-item>
 
-          <a-form-item label="imei" prop="imei" style="width: 500px">
-            <a-input v-model="form.imei"></a-input>
-          </a-form-item>
-          <a-form-item label="芯片ID" prop="chipId" style="width: 500px">
-            <a-input v-model="form.chipId"></a-input>
-          </a-form-item>
-          <a-form-item label="车架号" prop="vin" style="width: 500px">
-            <a-input v-model="form.vin"></a-input>
-          </a-form-item>
-          <a-form-item label="公钥" prop="publicKey">
-            <a-input
-              type="textarea"
-              :rows="2"
-              v-model="form.publicKey"
-            ></a-input>
+          <a-form-item
+            label="address"
+            name="address"
+            style="width: 450px"
+          >
+            <a-cascader v-model:value="form.address" :options="options" placeholder="Please select" />
           </a-form-item>
 
-          <a-form-item>
+          <a-form-item
+          style="width: 450px">
+            <a-space>
             <a-button
               type="primary"
-              @click="onSubmit"
-              style="margin-left: 80px"
-              >提交</a-button
-            >
-            <a-button @click="resetForm">重置</a-button>
+              @click="handleOk"
+              >Submit</a-button>
+            <a-button @click="handleCancel">Reset</a-button>
+          </a-space>
           </a-form-item>
         </a-form>
       </div>
-    </div>
-  </div>
 </template>
 
 <script>
@@ -62,54 +47,74 @@ export default defineComponent({
     const formRef = ref()
     const form = reactive(
       {
-        id: '',
-        type: '',
-        imei: '',
-        vin: '',
-        chipId: '',
-        publicKey: ''
+        name: '',
+        age: '',
+        address: ''
       }
     )
-    const options = ref([
+    const options = [
+  {
+    value: 'zhejiang',
+    label: 'Zhejiang',
+    children: [
       {
-        value: '1',
-        label: '动力'
+        value: 'hangzhou',
+        label: 'Hangzhou',
+        children: [
+          {
+            value: 'xihu',
+            label: 'West Lake',
+          },
+        ],
       },
+    ],
+  },
+  {
+    value: 'jiangsu',
+    label: 'Jiangsu',
+    children: [
       {
-        value: '2',
-        label: '底盘'
-      }
-    ])
+        value: 'nanjing',
+        label: 'Nanjing',
+        children: [
+          {
+            value: 'zhonghuamen',
+            label: 'Zhong Hua Men',
+          },
+        ],
+      },
+    ],
+  },
+];
     const rules = {
-      id: [
-        { required: true, trigger: 'blur', message: '请输入编号' }
+      name: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your name' }
       ],
-      vin: [
-        {
-          required: true,
-          trigger: 'change',
-          pattern: /^[A-HJ-NPR-Z\d]{17}$/,
-          message: '请输入17位数字或大写字母(I、O、Q除外)的组合!'
-        }
+      age: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your age' }
       ],
-      chipId: [
-        { required: true, trigger: 'blur', message: '芯片ID不能为空' }
-      ],
-      publicKey: [
-        { required: true, trigger: 'blur', message: '公钥不能为空' }
+      address: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your address' }
       ]
     }
-    const onSubmit = () => {
+    const handleOk = () => {
       formRef.value
         .validate()
         .then(() => {
+          loading.value = true
           console.log('values', form, toRaw(form))
+          Modal.success({
+            title: () => '注册成功！'
+          })
+          visible.value = false
+          loading.value = false
+          formRef.value.resetFields()
         })
         .catch(error => {
           console.log('error', error)
         })
     }
-    const resetForm = () => {
+    const handleCancel = () => {
       formRef.value.resetFields()
     }
 
@@ -122,12 +127,23 @@ export default defineComponent({
       form,
       rules,
       value: ref({
-        value: '动力'
+        value: ''
       }),
       options,
-      onSubmit,
-      resetForm
+      handleOk,
+      handleCancel
     }
   }
 })
 </script>
+<style>
+.addForm {
+  margin-top: 200px;
+  margin-left: 450px;
+}
+.titleAdd {
+  margin-top: 0px;
+  margin-left: 230px;
+  font-size: larger;
+}
+</style>
