@@ -1,28 +1,42 @@
 <template>
   <a-form ref="searchRef" :model="formSearch" label-width="100px">
     <a-space>
-      SearchBy: 
+      
       <a-row :gutter="5">
           <a-col :span="6.5">
+            <a-form-item
+            label="name"
+            name="name"
+            style="width: 300px"
+          >
               <a-input
-              addon-before="name:"
               v-model:value = "formSearch.nameSearch"
               ref="nameSearch"
+              placeholder="Please input name"
               ></a-input>
+              </a-form-item>
           </a-col>
           <a-col :span="6.5">
+            <a-form-item
+            label="age"
+            name="age"
+            style="width: 300px"
+          >
               <a-input
-              addon-before="age:"
               v-model:value = "formSearch.ageSearch"
               ref="searchAge"
-              ></a-input>
+              placeholder="Please input age"
+              >age：</a-input>
+              </a-form-item>
           </a-col>
           <a-col :span="6.5">
-              <a-input
-              addon-before="address:"
-              v-model:value = "formSearch.addressSearch"
-              ref="searchAddress"
-              ></a-input>
+            <a-form-item
+            label="address:"
+            name="address"
+            style="width: 300px"
+          >
+              <a-cascader v-model:value="formSearch.address" :options="options" placeholder="Please select address" />
+              </a-form-item>
           </a-col>
           <a-col>
               <a-button
@@ -80,7 +94,7 @@
   <!-- 数据列表 -->
     <a-table :columns="columns" :data-source="dataSource" bordered>
 
-      <template v-for="col in ['name', 'age', 'address']" #[col]="{ text, record }" :key="col">
+      <template v-for="col in ['name', 'age', 'address']" #[col]="{ text, record }" :key="col" :rules="rulesEdit">
         <div>
           <a-input
             v-if="editableData[record.key]"
@@ -148,6 +162,24 @@
             value: 'zhonghuamen',
             label: 'Zhong Hua Men',
           },
+          {
+            value: 'jimingi',
+            label: 'Ji Ming Si',
+          },
+        ],
+      },
+      {
+        value: 'suzhou',
+        label: 'Suzhou',
+        children: [
+          {
+            value: 'guanqianjie',
+            label: 'Guan Qian Street',
+          },
+          {
+            value: 'pingjiangsu',
+            label: 'Ping Jiang Road',
+          },
         ],
       },
     ],
@@ -200,12 +232,13 @@
   }
   
   export default defineComponent({
+    //图标组件
     components: {
     SearchOutlined,
     PlusCircleOutlined,
   },
     setup() {
-      //查询条件表单
+      //查询条件表单初始化
       const searchRef = ref()
       const formSearch = reactive(
       {
@@ -215,7 +248,7 @@
       }
     )
 
-    //信息添加表单
+    //信息添加表单初始化
     const loading = ref(false)
     const visible = ref(false)
 
@@ -229,6 +262,7 @@
       }
     )
 
+    //添加表单的必填项校验
     const rules = {
       name: [
         { required: true, trigger: ['blur', 'change'], message: 'Please input your name' }
@@ -241,27 +275,31 @@
       ]
     }
 
+    //编辑表格某一条记录内容时的必填项校验(未实现)
+    const rulesEdit = {
+      /*editableData[key]: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your address' }
+      ]*/
+    }
+
 
       const dataSource = ref(data);
       const editableData = reactive({});
 
-      const add = () => {
-        //editableData[key] = cloneDeep(dataSource.value.filter(item => key === item.key)[0]);
-      };
-  
+    //数据编辑
       const edit = key => {
         editableData[key] = cloneDeep(dataSource.value.filter(item => key === item.key)[0]);
       };
-
+      //数据删除
       const onDelete = key => {
       dataSource.value = dataSource.value.filter(item => item.key !== key);
     };
-  
+    //编辑后保存
       const save = key => {
         Object.assign(dataSource.value.filter(item => key === item.key)[0], editableData[key]);
         delete editableData[key];
       };
-  
+      //取消编辑
       const cancel = key => {
         delete editableData[key];
       };
@@ -284,14 +322,15 @@
           console.log('error', error)
         })
     }
-
+    //数据添加表单重置
     const resetForm = () => {
       addRef.value.resetFields()
     }
+    //数据添加弹窗显示
     const showModal = () => {
       visible.value = true
     }
-
+  //取消添加数据
     const handleCancel = () => {
       visible.value = false
       addRef.value.resetFields()
@@ -321,9 +360,7 @@
       formAdd,
       addRef,
       rules,
-      value: ref({
-        value: '1'
-      }),
+      rulesEdit,
       options,
       resetForm
 
@@ -338,4 +375,9 @@
   .delete-row-operations a {
     margin-right: 8px;
   }
+
+  /*设置input的placeholder文字居中 */
+  input::input-placeholder { text-align: center }
+  input::-ms-input-placeholder{text-align: center;} 
+  input::-webkit-input-placeholder{text-align: center;}
   </style>
