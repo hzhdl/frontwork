@@ -5,12 +5,11 @@
 </template>
 
 <script>
-import Tablee from './components/table'
+import Tablee from './views/edit_vfor.vue'
 
 export default {
   name: 'App',
   components: {
-    // eslint-disable-next-line vue/no-unused-components
     Tablee
   }
 }

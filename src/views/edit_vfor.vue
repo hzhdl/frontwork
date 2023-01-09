@@ -1,24 +1,26 @@
 <template>
-  <a-form ref="formRef" :model="form" label-width="100px">
+  <a-form ref="searchRef" :model="formSearch" label-width="100px">
     <a-space>
-    <a-row :gutter="5">
-      SearchBy: </a-row>
+      SearchBy: 
       <a-row :gutter="5">
           <a-col :span="6.5">
               <a-input
               addon-before="name:"
-              ref="searchName"
+              v-model:value = "formSearch.nameSearch"
+              ref="nameSearch"
               ></a-input>
           </a-col>
           <a-col :span="6.5">
               <a-input
               addon-before="age:"
+              v-model:value = "formSearch.ageSearch"
               ref="searchAge"
               ></a-input>
           </a-col>
           <a-col :span="6.5">
               <a-input
               addon-before="address:"
+              v-model:value = "formSearch.addressSearch"
               ref="searchAddress"
               ></a-input>
           </a-col>
@@ -33,14 +35,49 @@
           <a-col>
               <a-button
               type="primary"
-              @click="add"
+              @click="showModal"
               >
               <template #icon><PlusCircleOutlined /></template>
               add</a-button>
+            <!-- 信息添加弹窗 -->
+        <a-modal v-model:visible="visible" title="UserAdd" @ok="handleOk">
+        <template #footer>
+          <a-button key="back" @click="handleCancel">Return</a-button>
+          <a-button key="submit" type="primary" :loading="loading" @click="handleOk">Submit</a-button>
+        </template>
+        <a-form ref="addRef" :model="formAdd" :label-col="labelCol" :rules="rules">
+          <a-form-item
+            label="name"
+            name="name"
+            style="width: 450px"
+          >
+            <a-input v-model:value="formAdd.name"></a-input>
+          </a-form-item>
+
+          <a-form-item
+            label="age"
+            name="age"
+            style="width: 450px"
+          >
+            <a-input v-model:value="formAdd.age"></a-input>
+          </a-form-item>
+
+          <a-form-item
+            label="address"
+            name="address"
+            style="width: 450px"
+          >
+            <a-cascader v-model:value="formAdd.address" :options="options" placeholder="Please select" />
+          </a-form-item>
+
+          </a-form>
+      </a-modal>
+
           </a-col>
     </a-row>
     </a-space>
   </a-form>
+  <!-- 数据列表 -->
     <a-table :columns="columns" :data-source="dataSource" bordered>
 
       <template v-for="col in ['name', 'age', 'address']" #[col]="{ text, record }" :key="col">
@@ -77,9 +114,47 @@
   </template>
   <script>
   import { cloneDeep } from 'lodash-es';
-  import { defineComponent, reactive, ref } from 'vue';
+  import { defineComponent, reactive, ref, toRaw } from 'vue';
   import { SearchOutlined, PlusCircleOutlined } from '@ant-design/icons-vue';
+  import { Modal } from 'ant-design-vue'
 
+  //级联选择的选项以及子选项
+  const options = [
+  {
+    value: 'zhejiang',
+    label: 'Zhejiang',
+    children: [
+      {
+        value: 'hangzhou',
+        label: 'Hangzhou',
+        children: [
+          {
+            value: 'xihu',
+            label: 'West Lake',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'jiangsu',
+    label: 'Jiangsu',
+    children: [
+      {
+        value: 'nanjing',
+        label: 'Nanjing',
+        children: [
+          {
+            value: 'zhonghuamen',
+            label: 'Zhong Hua Men',
+          },
+        ],
+      },
+    ],
+  },
+];
+
+//列表内容
   const columns = [
     {
       title: 'name',
@@ -130,14 +205,42 @@
     PlusCircleOutlined,
   },
     setup() {
-      const formRef = ref()
-      const form = reactive(
+      //查询条件表单
+      const searchRef = ref()
+      const formSearch = reactive(
+      {
+        nameSearch: '',
+        ageSearch: '',
+        addressSearch: ''
+      }
+    )
+
+    //信息添加表单
+    const loading = ref(false)
+    const visible = ref(false)
+
+    const addRef = ref()
+    const formAdd = reactive(
       {
         name: '',
         age: '',
-        address: ''
+        address: '',
+        addressNew: '',
       }
     )
+
+    const rules = {
+      name: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your name' }
+      ],
+      age: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your age' }
+      ],
+      address: [
+        { required: true, trigger: ['blur', 'change'], message: 'Please input your address' }
+      ]
+    }
+
 
       const dataSource = ref(data);
       const editableData = reactive({});
@@ -162,6 +265,37 @@
       const cancel = key => {
         delete editableData[key];
       };
+
+      //添加表单提交
+      const handleOk = () => {
+      addRef.value
+        .validate()
+        .then(() => {
+          loading.value = true
+          console.log('values', formAdd, toRaw(formAdd))
+          Modal.success({
+            title: () => '注册成功！'
+          })
+          visible.value = false
+          loading.value = false
+          addRef.value.resetFields()
+        })
+        .catch(error => {
+          console.log('error', error)
+        })
+    }
+
+    const resetForm = () => {
+      addRef.value.resetFields()
+    }
+    const showModal = () => {
+      visible.value = true
+    }
+
+    const handleCancel = () => {
+      visible.value = false
+      addRef.value.resetFields()
+    }
   
       return {
         dataSource,
@@ -172,6 +306,27 @@
         edit,
         save,
         cancel,
+
+      visible,
+      loading,
+      showModal,
+      handleOk,
+      handleCancel,
+      labelCol: {
+        span: 4
+      },
+      other: '',
+      formSearch,
+      searchRef,
+      formAdd,
+      addRef,
+      rules,
+      value: ref({
+        value: '1'
+      }),
+      options,
+      resetForm
+
       };
     },
   });
