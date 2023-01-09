@@ -1,7 +1,7 @@
 <template>
   <a-form ref="searchRef" :model="formSearch" label-width="100px">
     <a-space>
-      
+
       <a-row :gutter="5">
           <a-col :span="6.5">
             <a-form-item
@@ -16,32 +16,32 @@
               ></a-input>
               </a-form-item>
           </a-col>
-          <a-col :span="6.5">
-            <a-form-item
-            label="age"
-            name="age"
-            style="width: 300px"
-          >
-              <a-input
-              v-model:value = "formSearch.ageSearch"
-              ref="searchAge"
-              placeholder="Please input age"
-              >age：</a-input>
-              </a-form-item>
-          </a-col>
-          <a-col :span="6.5">
-            <a-form-item
-            label="address:"
-            name="address"
-            style="width: 300px"
-          >
-              <a-cascader v-model:value="formSearch.address" :options="options" placeholder="Please select address" />
-              </a-form-item>
-          </a-col>
+<!--          <a-col :span="6.5">-->
+<!--            <a-form-item-->
+<!--            label="age"-->
+<!--            name="age"-->
+<!--            style="width: 300px"-->
+<!--          >-->
+<!--              <a-input-->
+<!--              v-model:value = "formSearch.ageSearch"-->
+<!--              ref="searchAge"-->
+<!--              placeholder="Please input age"-->
+<!--              >age：</a-input>-->
+<!--              </a-form-item>-->
+<!--          </a-col>-->
+<!--          <a-col :span="6.5">-->
+<!--            <a-form-item-->
+<!--            label="address:"-->
+<!--            name="address"-->
+<!--            style="width: 300px"-->
+<!--          >-->
+<!--              <a-cascader v-model:value="formSearch.address" :options="options" placeholder="Please select address" />-->
+<!--              </a-form-item>-->
+<!--          </a-col>-->
           <a-col>
               <a-button
               type="primary"
-              @click="search"
+              @click="searchname()"
               >
               <template #icon><SearchOutlined /></template>
               search</a-button>
@@ -92,15 +92,14 @@
     </a-space>
   </a-form>
   <!-- 数据列表 -->
-    <a-table :columns="columns" :data-source="dataSource" bordered>
-
+    <a-table :columns="columns" :data-source="dataSource" bordered >
       <template v-for="col in ['name', 'age', 'address']" #[col]="{ text, record }" :key="col" :rules="rulesEdit">
         <div>
-          <a-input
-            v-if="editableData[record.key]"
-            v-model:value="editableData[record.key][col]"
-            style="margin: -5px 0"
-          />
+            <a-input
+              v-if="editableData[record.key]"
+              v-model:value="editableData[record.key][col]"
+              style="margin: -5px 0"
+            />
           <template v-else>
             {{ text }}
           </template>
@@ -124,6 +123,7 @@
           </span>
         </div>
       </template>
+
     </a-table>
   </template>
   <script>
@@ -221,16 +221,17 @@
     },
   ];
   const data = [];
-  
-  for (let i = 0; i < 100; i++) {
+
+  for (let i = 0; i < 10; i++) {
     data.push({
       key: i.toString(),
       name: `Edrward ${i}`,
       age: 32,
       address: `London Park no. ${i}`,
+      delStatus: true
     });
   }
-  
+
   export default defineComponent({
     //图标组件
     components: {
@@ -285,6 +286,7 @@
 
       const dataSource = ref(data);
       const editableData = reactive({});
+      const searchdata=ref(data)
 
     //数据编辑
       const edit = key => {
@@ -292,12 +294,37 @@
       };
       //数据删除
       const onDelete = key => {
-      dataSource.value = dataSource.value.filter(item => item.key !== key);
-    };
-    //编辑后保存
+        dataSource.value = dataSource.value.filter(item => item.key !== key);
+        // dataSource.value.forEach((value, index, array) =>{
+        //   if (value.key===key){
+        //     dataSource.value[index].delStatus =false
+        //   }
+        // });
+      };
+      //数据搜索
+      const searchname = () => {
+        dataSource.value = searchdata.value.filter(item => {
+          return item.name.includes(formSearch.nameSearch)
+        });
+
+      };
+
+      //编辑后保存
       const save = key => {
-        Object.assign(dataSource.value.filter(item => key === item.key)[0], editableData[key]);
-        delete editableData[key];
+        if (editableData[key].name==="" ||editableData[key].age==="" ||editableData[key].address===""){
+          Modal.error({
+            title: () => '修改值不允许为空！'
+          })
+        }
+        else {
+          Modal.success({
+            title: () => '修改成功！'
+          })
+          Object.assign(dataSource.value.filter(item => key === item.key)[0], editableData[key]);
+          delete editableData[key];
+        }
+
+
       };
       //取消编辑
       const cancel = key => {
@@ -311,12 +338,21 @@
         .then(() => {
           loading.value = true
           console.log('values', formAdd, toRaw(formAdd))
+          let resdata={
+            key: formAdd.name.toString(),
+            name: formAdd.name,
+            age: formAdd.age,
+            address: formAdd.address[0].toString() +"/"+formAdd.address[1].toString()+"/"+formAdd.address[2].toString(),
+          }
+          dataSource.value.push(resdata)
+          searchdata.value.push(resdata)
           Modal.success({
             title: () => '注册成功！'
           })
           visible.value = false
           loading.value = false
           addRef.value.resetFields()
+
         })
         .catch(error => {
           console.log('error', error)
@@ -335,7 +371,7 @@
       visible.value = false
       addRef.value.resetFields()
     }
-  
+
       return {
         dataSource,
         columns,
@@ -345,6 +381,7 @@
         edit,
         save,
         cancel,
+        searchname,
 
       visible,
       loading,
@@ -378,6 +415,6 @@
 
   /*设置input的placeholder文字居中 */
   input::input-placeholder { text-align: center }
-  input::-ms-input-placeholder{text-align: center;} 
+  input::-ms-input-placeholder{text-align: center;}
   input::-webkit-input-placeholder{text-align: center;}
   </style>
