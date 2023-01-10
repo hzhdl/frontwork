@@ -1,21 +1,29 @@
 <template>
-  <div>
-    <a-card>
-      <p>
-        <a-button @click="uploadExcel"><a-icon type="file-excel" />Execl上传</a-button>
-        <input type="file" @change="changeEvent" ref="execl" name id />
-        <a-button @click="saveExecl">保存execl</a-button>
-      </p>
 
-      <a-table :columns="columns" :data-source="data">
-        <a slot="name" slot-scope="text">{{ text }}</a>
-      </a-table>
-    </a-card>
-  </div>
+<a-space>
+  <a-button @click="uploadExcel"><a-icon type="file-excel" />Execl上传</a-button>
+  <input type="file" @change="changeEvent" ref="execl" name id />
+
+  <a-button @click="downloadExecl">Execl下载</a-button>
+
+  <!-- <download-excel
+        class = "export-excel-wrapper"
+        :data = "data"
+        name = "out.xls">
+        <a-button type="primary" size="small">导出EXCEL</a-button>
+      </download-excel> -->
+
+</a-space>
+
+<a-table :columns="columns" :data-source="data">
+  <a slot="name" slot-scope="text">{{ text }}</a>
+</a-table>
+
 </template>
-
 <script>
-import XLSX from "xlsx";
+import FileSaver from "file-saver"
+import XLSX from "xlsx"
+
 const columns = [
   {
     title: "Name",
@@ -73,6 +81,7 @@ const data = [
     address: "Sidney No. 1 Lake Park, Sidney No. 1 Lake Park"
   }
 ];
+
 import Tools from "@/tools/tools.js";
 export default {
   data() {
@@ -130,46 +139,48 @@ export default {
           this.columns = Tools.unique(col);
           // 填充数据
           this.data = execl_data;
+          console.log(typeof(file[0]));
         } catch (e) {
           console.error(e);
         }
       };
     },
-    saveExecl() {
+
+    downloadExecl() {
       // 获取当前input
       let file = this.$refs.execl.files;
       // 创建filereader
       let fileReader = new FileReader();
+      let fileDownload = file[0].originFileObj ? file[0].originFileObj : file[0];
+      console.log(typeof(fileDownload.originFileObj()));
       
-      // 把二进制数据流转为string
-      fileReader.readAsBinaryString(file[0]);
-      fileReader.onload = ev => {
-        // 获取文件流
-        let data = ev.target.result;
-        try {
-          // 用xlsx插件转码当前文件流
-          let execl = XLSX.read(data, {
-            type: "binary"
-          });
-          XLSX.writeFile(execl, "out.xlsb");
-          // 获取execl中数据的标题
-        } catch (e) {
-          console.error(e);
-        }
-      };
+       // 把二进制数据流转为string
+       fileReader.readAsBinaryString(file[0]);
+       fileReader.onload = ev => {
+         // 获取文件流
+         let data = ev.target.result;
+         try {
+           // 用xlsx插件转码当前文件流
+           let execl = XLSX.read(data, {
+             type: "binary"
+           });
+           XLSX.writeFile(execl, "out.xlsb");
+           // 获取execl中数据的标题
+         } catch (e) {
+           console.error(e);
+         }};
     }
   }
 };
+
+
+// import { UploadOutlined, DownloadOutlined } from '@ant-design/icons-vue';
+// import { defineComponent, ref } from 'vue';
+// export default defineComponent({
+//   components: {
+//     UploadOutlined,
+//     DownloadOutlined
+//   },
+
+
 </script>
-
-
-<style lang="less" scoped>
-p {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  input {
-    margin-left: 30px;
-  }
-}
-</style>
