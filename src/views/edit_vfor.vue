@@ -91,7 +91,7 @@
   </a-form>
   <!-- 数据列表 -->
     <a-table :columns="colmunsref" :data-source="dataSource" bordered >
-      <template v-for="col in ['name', 'age', 'address']" #[col]="{ text, record }" :key="col" :rules="rulesEdit">
+      <template v-for="col in colss" #[col]="{ text, record }" :key="col" :rules="rulesEdit">
         <div>
             <a-input
               v-if="editableData[record.key]"
@@ -221,7 +221,7 @@
     },
   ];
   const data = [];
-
+  let cols=['name','age','address']
   for (let i = 0; i < 10; i++) {
     data.push({
       key: i.toString(),
@@ -240,6 +240,7 @@
     PlusCircleOutlined,
   },
     setup() {
+      const colss=ref(cols)
       //查询条件表单初始化
       const searchRef = ref()
       const formSearch = reactive(
@@ -411,13 +412,18 @@
 
             // 获取execl中数据的标题
             let col = [];
+            colss.value=[]
             for (const key in execl_data[0]) {
               col.push({
                 title: key.toString(),
                 dataIndex: key.toString(),
                 key: key.toString(),
-                ellipsis: true
+                ellipsis: true,
+                slots: {
+                  customRender: key.toString(),
+                },
               });
+              colss.value.push(key.toString())
             }
             // 填充表头
             // columns = Tools.unique(col);
@@ -455,6 +461,7 @@
       }
 
       return {
+        colss,
         colmunsref,
         execll,
         changeEvent,
