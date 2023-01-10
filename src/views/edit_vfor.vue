@@ -232,7 +232,8 @@
     });
   }
 
-  export default defineComponent({
+  export default ({
+    name:"edit_vfor",
     //图标组件
     components: {
     SearchOutlined,
