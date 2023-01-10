@@ -2,9 +2,11 @@ import { createRouter,createWebHashHistory } from 'vue-router'
 
 import edit_vfor from '../views/edit_vfor'
 import hightable from '../views/hightable'
+import updown from '../views/fileOperation'
 const routes = [
   { path: '/', component: edit_vfor },
   { path: '/highlevel', component: hightable },
+  { path: '/updown', component: updown },
   // { path: '/details', component: Details },
 ]
 

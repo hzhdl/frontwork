@@ -4,7 +4,7 @@
   <a-button @click="uploadExcel"><a-icon type="file-excel" />Execl上传</a-button>
   <input type="file" @change="changeEvent" ref="execl" name id />
 
-  <a-button @click="downloadExecl">Execl下载</a-button>
+  <a-button @click="exportexvel">Execl下载</a-button>
 
   <!-- <download-excel
         class = "export-excel-wrapper"
@@ -22,7 +22,7 @@
 </template>
 <script>
 import FileSaver from "file-saver"
-import XLSX from "xlsx"
+import * as XLSX from "xlsx";
 
 const columns = [
   {
@@ -82,8 +82,9 @@ const data = [
   }
 ];
 
-import Tools from "@/tools/tools.js";
+import Tools from "../tools/tools.js";
 export default {
+  name:"updown",
   data() {
     return {
       data,
@@ -146,29 +147,43 @@ export default {
       };
     },
 
-    downloadExecl() {
-      // 获取当前input
-      let file = this.$refs.execl.files;
-      // 创建filereader
-      let fileReader = new FileReader();
-      let fileDownload = file[0].originFileObj ? file[0].originFileObj : file[0];
-      console.log(typeof(fileDownload.originFileObj()));
-      
-       // 把二进制数据流转为string
-       fileReader.readAsBinaryString(file[0]);
-       fileReader.onload = ev => {
-         // 获取文件流
-         let data = ev.target.result;
-         try {
-           // 用xlsx插件转码当前文件流
-           let execl = XLSX.read(data, {
-             type: "binary"
-           });
-           XLSX.writeFile(execl, "out.xlsb");
-           // 获取execl中数据的标题
-         } catch (e) {
-           console.error(e);
-         }};
+    // downloadExecl() {
+    //   // 获取当前input
+    //   let file = this.$refs.execl.files;
+    //   // 创建filereader
+    //   let fileReader = new FileReader();
+    //   let fileDownload = file[0].originFileObj ? file[0].originFileObj : file[0];
+    //   console.log(typeof(fileDownload.originFileObj()));
+    //
+    //    // 把二进制数据流转为string
+    //    fileReader.readAsBinaryString(file[0]);
+    //    fileReader.onload = ev => {
+    //      // 获取文件流
+    //      let data = ev.target.result;
+    //      try {
+    //        // 用xlsx插件转码当前文件流
+    //        let execl = XLSX.read(data, {
+    //          type: "binary"
+    //        });
+    //        XLSX.writeFile(execl, "out.xlsb");
+    //        // 获取execl中数据的标题
+    //      } catch (e) {
+    //        console.error(e);
+    //      }};
+    // },
+
+    exportexvel(){
+      // 随便声明一个结果
+      let arr=[{name:"小红",age:18},{name:"小明",age:20}]
+      // 创建一个新的工作簿
+      const workbook = XLSX.utils.book_new();
+      // 创建一个新的工作表
+      const worksheet = XLSX.utils.json_to_sheet(this.data);
+      // 将工作表附加到工作簿，并将工作表命名为students
+      XLSX.utils.book_append_sheet(workbook, worksheet, "test");
+      // 导出工作簿，并命名导出文件名为Presidents.xlsx
+      XLSX.writeFile(workbook, "Presidents.xlsx");
+
     }
   }
 };

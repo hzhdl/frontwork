@@ -46,6 +46,7 @@
             <template #icon><SearchOutlined /></template>
             search</a-button>
         </a-col>
+
         <a-col>
           <a-button
             type="primary"
@@ -111,12 +112,30 @@
           </a-modal>
 
         </a-col>
+        <a-col >
+          <a-form-item
+            label="导入excel"
+            name="name"
+            style="width: 300px"
+          >
+            <input type="file" @change="changeEvent" ref="execll" name id />
+          </a-form-item>
+        </a-col>
+        <!--        <a-col >-->
+        <!--          <input type="file" @change="changeEvent" ref="execl" name id />-->
+
+
+        <!--        </a-col>-->
+        <a-col >
+          <a-button @click="exportexvel">导出Execl</a-button>
+
+        </a-col>
       </a-row>
     </a-space>
   </a-form>
   <!-- 数据列表 -->
-  <a-table :columns="columns" :data-source="dataSource"  bordered >
-    <template v-for="col in ['city', 'province', 'weather','winddirection','windpower','reporttime']" #[col]="{ text, record }" :key="col" :rules="rulesEdit">
+  <a-table :columns="colmunsref" :data-source="dataSource"  bordered >
+    <template v-for="col in colss" #[col]="{ text, record }" :key="col" :rules="rulesEdit">
       <div>
         <a-input
           v-if="editableData[record.key]"
@@ -155,6 +174,7 @@ import { defineComponent, reactive, ref, toRaw } from 'vue';
 import { SearchOutlined, PlusCircleOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue'
 import { useStore } from 'vuex'
+import * as XLSX from 'xlsx'
 
 
 //级联选择的选项以及子选项
@@ -276,16 +296,7 @@ const columns = [
   },
 ];
 const data = [];
-
-// for (let i = 0; i < 1; i++) {
-//   data.push({
-//     key: i.toString(),
-//     name: `Edrward ${i}`,
-//     age: 32,
-//     address: `London Park no. ${i}`,
-//     delStatus: true
-//   });
-// }
+let cols=['city','province','weather','winddirection','winddirection','windpower','reporttime']
 
 
 export default ({
@@ -302,6 +313,7 @@ export default ({
   },
   setup() {
 
+    const colss=ref(cols)
     //vuex状态管理
     const store = useStore()
     // console.log(store.state)
@@ -401,6 +413,7 @@ export default ({
 
 
     const dataSource = ref(store.state.tabledata);
+    let colmunsref=ref(columns);
     const editableData = reactive({});
     const searchdata=ref(store.state.sourcetabledata)
 
@@ -408,6 +421,7 @@ export default ({
     const edit = key => {
       // console.log(key)
       editableData[key] = cloneDeep(dataSource.value.filter(item => key === item.key)[0]);
+      console.log(editableData[key])
 
     };
     //数据删除
@@ -492,8 +506,99 @@ export default ({
       visible.value = false
       addRef.value.resetFields()
     }
+    //excel操作
+    let execll= ref(null)
+    const changeEvent=()=>{
+      // 获取当前input
+
+      let file = execll.value.files;
+      // console.log(execll)
+      // 创建filereader
+      let fileReader = new FileReader();
+      // 把二进制数据流转为string
+      fileReader.readAsBinaryString(file[0]);
+      // execl表格里面的数据
+      let execl_data = [];
+      // filereader onload事件
+      fileReader.onload = ev => {
+        // 获取文件流
+        let data = ev.target.result;
+        try {
+          // 用xlsx插件转码当前文件流
+          let execl = XLSX.read(data, {
+            type: "binary"
+          });
+          // 一个execl有多个sheets，这里拿到的是所有的sheets
+          let Sheets = execl.Sheets;
+          // 读取所有的sheets
+          for (let sheet in Sheets) {
+            let isNotNull = Sheets[sheet]["!ref"];
+            // 判空
+            if (isNotNull !== undefined) {
+              // 获取execl所有数据
+              execl_data = execl_data.concat(
+                XLSX.utils.sheet_to_json(Sheets[sheet])
+              );
+            }
+          }
+
+          // 获取execl中数据的标题
+          let col = [];
+          colss.value=[]
+          for (const key in execl_data[0]) {
+            col.push({
+              title: key.toString(),
+              dataIndex: key.toString(),
+              key: key.toString(),
+              ellipsis: true,
+              slots: {
+                customRender: key.toString(),
+              },
+            });
+            colss.value.push(key.toString())
+          }
+          // 填充表头
+          // columns = Tools.unique(col);
+          // console.log(col)
+          col.push({
+            title: 'operation',
+            dataIndex: 'operation',
+            slots: {
+              customRender: 'operation',
+            },
+          })
+          colmunsref.value = col
+          // 填充数据
+          dataSource.value = execl_data;
+          console.log(typeof(file[0]));
+        } catch (e) {
+          console.error(e);
+        }
+      };
+    }
+
+    const exportexvel=()=>{
+      // 随便声明一个结果
+      // let arr=[{name:"小红",age:18},{name:"小明",age:20}]
+      // 创建一个新的工作簿
+      const workbook = XLSX.utils.book_new();
+      // 创建一个新的工作表
+      console.log(dataSource)
+      const worksheet = XLSX.utils.json_to_sheet(dataSource.value);
+      // 将工作表附加到工作簿，并将工作表命名为students
+      XLSX.utils.book_append_sheet(workbook, worksheet, "data");
+      // 导出工作簿，并命名导出文件名为Presidents.xlsx
+      XLSX.writeFile(workbook, "dataexport.xlsx");
+
+    }
 
     return {
+      colss,
+      execl: {},
+      colmunsref,
+      execll,
+      exportexvel,
+      changeEvent,
       dataSource,
       columns,
       editingKey: '',
